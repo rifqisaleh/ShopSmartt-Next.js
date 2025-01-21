@@ -52,7 +52,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-urbanChic-200 p-4 flex items-center justify-between">
+    <header className="bg-urbanChic-100 p-4 flex items-center justify-between">
       {/* Left Section: Hamburger Menu */}
       <div className="flex items-center">
         <button className="sm:hidden block text-black" onClick={handleMenuToggle}>

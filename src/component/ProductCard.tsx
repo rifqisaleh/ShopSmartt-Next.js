@@ -21,29 +21,29 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   };
 
   return (
-    <div className="border rounded-lg p-4 shadow-md bg-white">
+    <div className="border rounded-3xl p-4 shadow-lg bg-white flex flex-col items-center justify-center">
       {/* Link to Product Details */}
       <Link href={`/product/${product.id}`} className="block">
         <Image
           src={imageUrl}
           alt={product.title}
-          width={160}
-          height={160}
+          width={200}
+          height={200}
           className="object-cover mb-2 rounded"
           priority={true} // Improve performance for critical images
         />
       </Link>
-
+  
       {/* Product Title */}
-      <Link href={`/product/${product.id}`} className="block">
+      <Link href={`/product/${product.id}`} className="block text-center">
         <h2 className="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-500 transition">
           {product.title}
         </h2>
       </Link>
-
+  
       {/* Product Price */}
       <p className="text-gray-600">${product.price.toFixed(2)}</p>
-
+  
       {/* Add to Cart Button */}
       <button
         onClick={handleAddToCart}
