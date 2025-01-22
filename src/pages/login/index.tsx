@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import Head from "next/head";
@@ -36,18 +36,21 @@ const Login = () => {
       const data = await response.json();
 
       // Set token in cookies
-    document.cookie = `token=${data.access_token}; path=/;`;
-    console.log("Token set in cookie:", data.access_token);
+      document.cookie = `token=${data.access_token}; path=/;`;
+      console.log("Token set in cookie:", data.access_token);
 
+      // Call login function
       login(data.access_token, data.refresh_token);
-      
-      console.log("Redirecting to Dashrboard...");
+      console.log("Login function called with:", data.access_token, data.refresh_token);
+
+      // Redirect to dashboard
+      console.log("Redirecting to Dashboard...");
       await router.push("/dashboard");
       console.log("After redirect");
-
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
+        console.log("Error set to:", err.message); // Debugging line
       } else {
         setError("An unexpected error occurred.");
       }
@@ -55,6 +58,12 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  // Debugging state changes
+  useEffect(() => {
+    console.log("Error state:", error);
+    console.log("Loading state:", loading);
+  }, [error, loading]);
 
   return (
     <>
@@ -67,7 +76,7 @@ const Login = () => {
           <h2 className="mt-6 text-3xl text-center text-black">Welcome Back!</h2>
           <p className="text-sm text-gray-600 text-center mt-2">Login to your account</p>
 
-          {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+          {error && <p role="alert" className="text-red-500 text-center mt-2">{error}</p>}
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
@@ -116,7 +125,7 @@ const Login = () => {
           <p className="text-center text-sm text-gray-500 mt-4">
             Don't have an account?{" "}
             <Link href="/register" className="text-blue-500 hover:underline">
-            Sign up
+              Sign up
             </Link>
           </p>
         </div>
