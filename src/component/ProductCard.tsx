@@ -8,7 +8,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const imageUrl =
     product.images && product.images.length > 0
       ? product.images[0]
-      : "/placeholder.jpeg";
+      : "/placeholder.png";
 
   const { addToCart } = useContext(CartContext);
 

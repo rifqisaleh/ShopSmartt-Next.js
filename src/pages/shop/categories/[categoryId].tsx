@@ -12,7 +12,7 @@ const CategoryPage: React.FC = () => {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [filters, setFilters] = useState({
     searchQuery: "",
-    priceRange: [0, 500],
+    priceRange: [0, 500] as [number, number], // Explicit tuple type
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -22,7 +22,7 @@ const CategoryPage: React.FC = () => {
     const fetchCategoryData = async () => {
       try {
         const resProducts = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}products/?categoryId=${categoryId}`
+          `${process.env.NEXT_PUBLIC_API_URL}products/?categoryId=${String(categoryId)}`
         );
         if (!resProducts.ok) throw new Error("Failed to fetch products");
 
@@ -72,7 +72,7 @@ const CategoryPage: React.FC = () => {
       <div className="lg:w-1/4 w-full space-y-6 mb-4 lg:mb-0">
         <CategoryFilter
           filters={{
-            categoryId: String(categoryId) || null,
+            categoryId: categoryId ? String(categoryId) : null, // Explicitly handle undefined
             ...filters,
           }}
           categories={categories}

@@ -73,7 +73,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
           value={priceRange[1]}
           onChange={(e) =>
             onFilterChange({
-              priceRange: [priceRange[0], Number(e.target.value)],
+              priceRange: [priceRange[0], Number(e.target.value)] as [number, number],
             })
           }
           className="w-full appearance-none h-2 bg-urbanChic-500 rounded-md"

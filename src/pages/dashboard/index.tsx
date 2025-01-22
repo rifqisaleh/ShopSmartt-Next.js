@@ -37,34 +37,60 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
     window.location.href = "/login";
   };
 
+  //For Account deletion
   const handleDeleteAccount = async () => {
     try {
-      console.log("Deleting account...");
+      console.debug("Initiating account deletion process...");
+  
       const confirmDelete = window.confirm("Are you sure you want to delete your account?");
       if (!confirmDelete) {
-        console.log("Account deletion cancelled by user.");
+        console.debug("Account deletion cancelled by the user.");
         return;
       }
-
+  
+      // Extract token from cookies
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+  
+      if (!token) {
+        console.error("Token not found in cookies.");
+        throw new Error("Authorization token is missing. Please log in again.");
+      }
+      console.debug("Authorization token retrieved:", token);
+  
+      // Make DELETE request to the API
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/profile`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${document.cookie.split("token=")[1]}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
-
+  
+      // Log request and response details
+      console.debug("DELETE request sent to:", `${process.env.NEXT_PUBLIC_API_URL}auth/profile`);
+      console.debug("Response status:", response.status);
+      console.debug("Response headers:", response.headers);
+  
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Failed to delete account:", errorData);
+        console.error("Failed to delete account. Response data:", errorData);
         throw new Error(errorData.message || "Failed to delete the account.");
       }
-
+  
+      // Successful deletion
       console.log("Account deleted successfully.");
-      alert("Your account has been deleted.");
+      alert("Your account has been deleted. You will be logged out.");
       handleLogout();
     } catch (err) {
+      // Enhanced error logging
       console.error("Error during account deletion:", err);
-      alert(err instanceof Error ? err.message : "Unexpected error.");
+      alert(err instanceof Error ? err.message : "An unexpected error occurred.");
     }
   };
+  
 
   if (!profile) {
     return (

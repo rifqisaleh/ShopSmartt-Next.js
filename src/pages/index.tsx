@@ -171,11 +171,11 @@ const LandingPage: React.FC = () => {
                     onClick={() => router.push(`/shop?category=${category.id}`)}
                   >
                     <img
-                      src={category.image || "/fallback-image.jpg"}
+                      src={category.image || "/placeholder.png"}
                       alt={category.name}
-                      className="w-28 h-28 sm:w-36 sm:h-36 object-cover hover:scale-105 transition-transform"
+                      className="w-48 h-48 sm:w-56 sm:h-56 object-cover hover:scale-105 transition-transform"
                       onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/150";
+                        e.currentTarget.src = "/placeholder.png";
                       }}
                     />
                     <span className="mt-2 text-sm text-gray-600 font-medium">{category.name}</span>

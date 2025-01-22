@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image"; // Import Next.js Image component
 import { GetStaticPaths, GetStaticProps } from "next";
 import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
@@ -34,11 +35,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
   return (
     <div className="bg-urbanChic-100 p-4 mt-32 mb-56">
       <h1 className="text-4xl text-urbanChic-600 mb-16 text-center">{product.title}</h1>
-      <img
-        src={product.images?.[0] || "https://via.placeholder.com/150"}
-        alt={product.title}
-        className="w-full max-w-md mx-auto mb-16"
-      />
+      <div className="w-full max-w-md mx-auto mb-16">
+        <Image
+          src={product.images?.[0] || "/placeholder.png"}
+          alt={product.title || "Product Image"}
+          width={500} // Define the width of the image
+          height={500} // Define the height of the image
+          className="rounded-lg" 
+        />
+      </div>
       <p className="text-gray-600 mb-8 text-center italic text-xl">{product.description}</p>
       <p className="text-2xl font-semibold mb-24 mt-24 text-center">
         {product.price ? `$${product.price.toFixed(2)}` : "Price unavailable"}
