@@ -1,59 +1,53 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import ProductDetail from "@/pages/product/[id]";
-import { CartContext, CartContextProps } from "@/context/CartContext";
+import { render, screen, fireEvent } from '@testing-library/react';
+import ProductDetail from '@/pages/product/[id]';
+import { CartContext, CartContextProps } from '@/context/CartContext';
 
-describe("ProductDetail Component", () => {
-  // Mock product data used in tests
+describe('ProductDetail Component', () => {
+  // Mock product data
   const mockProduct = {
     id: 1,
-    title: "Test Product",
-    description: "This is a test product description.",
+    title: 'Test Product',
+    description: 'This is a test product description.',
     price: 99.99,
-    images: ["/test-image.jpg"], // Mock image array
+    images: ['/test-image.jpg'],
   };
 
-  // Mock CartContextProps with all required properties
+  // Mock CartContext
   const mockCartContext: CartContextProps = {
-    cart: [], // Mock cart as an empty array
-    cartCount: 0, // Initial cart count is set to 0
-    addToCart: jest.fn(), // Mock function for adding products to the cart
-    updateCart: jest.fn(), // Mock function for updating cart items
+    cart: [],
+    cartCount: 0,
+    addToCart: jest.fn(),
+    updateCart: jest.fn(),
   };
 
-  // Test 1: Verify that the ProductDetail component renders all product details correctly
-  test("renders product details correctly", () => {
-    // Render the ProductDetail component with mock product data
-    render(<ProductDetail product={mockProduct} />);
+  // Test 1: Verify that ProductDetail renders product details correctly
+  test('renders product details correctly', () => {
+    render(
+      <CartContext.Provider value={mockCartContext}>
+        <ProductDetail product={mockProduct} /> {/* Pass mockProduct as prop */}
+      </CartContext.Provider>
+    );
 
-    // Verify that the product title is rendered
+    // Check if product details are rendered
     expect(screen.getByText(mockProduct.title)).toBeInTheDocument();
-
-    // Verify that the product description is rendered
     expect(screen.getByText(mockProduct.description)).toBeInTheDocument();
-
-    // Verify that the product price is rendered
     expect(screen.getByText(`$${mockProduct.price.toFixed(2)}`)).toBeInTheDocument();
-
-    // Verify that the product image is rendered with the correct alt text
     expect(screen.getByAltText(mockProduct.title)).toBeInTheDocument();
   });
 
-  // Test 2: Verify that clicking the "Add to Cart" button calls the addToCart function
-  test("calls addToCart when 'Add to Cart' button is clicked", () => {
-    // Render the ProductDetail component with mock CartContext
+  // Test 2: Verify "Add to Cart" functionality
+  test('calls addToCart when "Add to Cart" button is clicked', () => {
     render(
       <CartContext.Provider value={mockCartContext}>
         <ProductDetail product={mockProduct} />
       </CartContext.Provider>
     );
 
-    // Locate the "Add to Cart" button
+    // Find and click the "Add to Cart" button
     const addToCartButton = screen.getByText(/add to cart/i);
-
-    // Simulate a click on the "Add to Cart" button
     fireEvent.click(addToCartButton);
 
-    // Verify that the addToCart function was called with the correct product details
+    // Verify addToCart was called with the correct product
     expect(mockCartContext.addToCart).toHaveBeenCalledWith({
       id: mockProduct.id,
       title: mockProduct.title,
@@ -62,12 +56,11 @@ describe("ProductDetail Component", () => {
     });
   });
 
-  // Test 3: Verify that the fallback message is displayed when the product is undefined
-  test("renders 'Product not found!' when product is undefined", () => {
-    // Render the ProductDetail component with an undefined product
+  // Test 3: Verify fallback for missing product
+  test('renders "Product not found!" when product is undefined', () => {
     render(<ProductDetail product={undefined} />);
 
-    // Verify that the fallback message is displayed
-    expect(screen.getByText("Product not found!")).toBeInTheDocument();
+    // Check for fallback message
+    expect(screen.getByText(/product not found!/i)).toBeInTheDocument();
   });
 });

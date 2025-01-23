@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 
 // API URL from environment variables
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/";
 
 // Define interface for form data
 interface FormData {
@@ -26,6 +26,10 @@ interface FormErrors {
   general?: string;
 }
 
+export interface Role {
+  role: string;
+}
+
 const Register: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -36,32 +40,29 @@ const Register: React.FC = () => {
     dob: "",
   });
 
-  const [roles, setRoles] = useState<string[]>(["Customer", "Admin"]);
+  const [roles, setRoles] = useState<string[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [rolesLoading, setRolesLoading] = useState<boolean>(true); // For roles fetching
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [rolesError, setRolesError] = useState<string | null>(null);
   const router = useRouter();
 
   // Fetch roles dynamically
   useEffect(() => {
     const fetchRoles = async () => {
-      setRolesLoading(true);
       try {
-        const response = await fetch(`${apiUrl}users`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch roles");
-        }
-
-        const users: { role: string }[] = await response.json();
-        const rolesData = [...new Set(users.map((user) => user.role))]; // Ensure roles are unique
-        setRoles(rolesData);
+        const response = await fetch('/api/roles');
+        const rolesData: Role[] = await response.json(); // Explicitly define the type of rolesData
+        setRoles(rolesData.map((role: Role) => role.role));
       } catch (error) {
-        console.error("Error fetching roles:", error);
+        console.error('Error fetching roles:', error);
+        setRoles(['Customer', 'Admin']); // Default roles
       } finally {
         setRolesLoading(false);
       }
     };
-
+  
     fetchRoles();
   }, []);
 
@@ -95,7 +96,8 @@ const Register: React.FC = () => {
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setErrors({}); // Clear previous errors
+    setErrors({});
+    setSuccessMessage(null);
     const newErrors = validateForm();
 
     if (Object.keys(newErrors).length > 0) {
@@ -105,7 +107,9 @@ const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${apiUrl}users/`, {
+      if (!apiUrl) throw new Error("API URL is not defined");
+
+      const response = await fetch(`${apiUrl}users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,7 +123,7 @@ const Register: React.FC = () => {
         throw new Error(errorData.message || "Failed to register. Please try again.");
       }
 
-      alert("Registration successful!");
+      setSuccessMessage("Registration successful!");
       setFormData({
         name: "",
         email: "",
@@ -128,7 +132,11 @@ const Register: React.FC = () => {
         role: "",
         dob: "",
       });
-      router.push("/login");
+
+      // Redirect to login after success
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
     } catch (err) {
       console.error("Registration error:", err);
       setErrors({ general: err instanceof Error ? err.message : "An unexpected error occurred." });
@@ -136,6 +144,8 @@ const Register: React.FC = () => {
       setLoading(false);
     }
   };
+
+  
 
   return (
     <>
@@ -153,9 +163,10 @@ const Register: React.FC = () => {
               Create your account
             </h2>
             {errors.general && <p className="text-center text-red-600">{errors.general}</p>}
-            <form className="space-y-6" onSubmit={handleSubmit} noValidate> {/* 
-    use `noValidate` for testing.
-    */}
+            {successMessage && <p className="text-center text-green-600">{successMessage}</p>}
+
+
+            <form className="space-y-6" onSubmit={handleSubmit} noValidate> {/* use `noValidate` for testing.*/}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Name
@@ -220,30 +231,34 @@ const Register: React.FC = () => {
                 {errors.confirmPassword && (
                   <p className="text-sm text-red-600">{errors.confirmPassword}</p>
                 )}
-              </div>
-              <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                  Role
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                >
-                  <option value="" disabled>
-                    Select a role
-                  </option>
-                  {roles.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-                {errors.role && <p className="text-sm text-red-600">{errors.role}</p>}
-              </div>
+                </div>
+                <div>
+  <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+    Role
+  </label>
+  {rolesLoading ? (
+    <p className="text-sm text-gray-500">Loading roles...</p>
+  ) : (
+    <select
+      id="role"
+      name="role"
+      value={formData.role}
+      onChange={handleChange}
+      required
+      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+    >
+      <option value="" disabled>
+        Select a role
+      </option>
+      {roles.map((role) => (
+        <option key={role} value={role}>
+          {role}
+        </option>
+      ))}
+    </select>
+  )}
+  {errors.role && <p className="text-sm text-red-600">{errors.role}</p>}
+</div>
               <div>
                 <label htmlFor="dob" className="block text-sm font-medium text-gray-700">
                   Date of Birth
