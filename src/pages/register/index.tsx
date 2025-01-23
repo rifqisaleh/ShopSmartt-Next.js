@@ -39,6 +39,7 @@ const Register: React.FC = () => {
   const [roles, setRoles] = useState<string[]>(["Customer", "Admin"]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState<boolean>(false);
+  const [rolesLoading, setRolesLoading] = useState<boolean>(true); // For roles fetching
   const router = useRouter();
 
   // Fetch roles dynamically
@@ -81,6 +82,7 @@ const Register: React.FC = () => {
     }
     if (!formData.role) newErrors.role = "Role is required";
     if (!formData.dob) newErrors.dob = "Date of Birth is required";
+    console.log("Errors State:", newErrors);
     return newErrors;
   };
 
