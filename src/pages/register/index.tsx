@@ -45,23 +45,23 @@ const Register: React.FC = () => {
   // Fetch roles dynamically
   useEffect(() => {
     const fetchRoles = async () => {
+      setRolesLoading(true);
       try {
         const response = await fetch(`${apiUrl}users`);
         if (!response.ok) {
           throw new Error("Failed to fetch roles");
         }
-  
-        // Explicitly type the JSON response
+
         const users: { role: string }[] = await response.json();
         const rolesData = [...new Set(users.map((user) => user.role))]; // Ensure roles are unique
-  
-        // Ensure rolesData is typed as string[]
         setRoles(rolesData);
       } catch (error) {
         console.error("Error fetching roles:", error);
+      } finally {
+        setRolesLoading(false);
       }
     };
-  
+
     fetchRoles();
   }, []);
 
@@ -74,22 +74,28 @@ const Register: React.FC = () => {
   // Validate form inputs
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Simple email regex
+
     if (!formData.name) newErrors.name = "Name is required";
-    if (!formData.email) newErrors.email = "Email is required";
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Email must be a valid email address";
+    }
     if (!formData.password) newErrors.password = "Password is required";
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
     if (!formData.role) newErrors.role = "Role is required";
     if (!formData.dob) newErrors.dob = "Date of Birth is required";
-    console.log("Errors State:", newErrors);
+
     return newErrors;
   };
 
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setErrors({});
+    setErrors({}); // Clear previous errors
     const newErrors = validateForm();
 
     if (Object.keys(newErrors).length > 0) {
@@ -147,7 +153,7 @@ const Register: React.FC = () => {
               Create your account
             </h2>
             {errors.general && <p className="text-center text-red-600">{errors.general}</p>}
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-6" onSubmit={handleSubmit} noValidate>
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Name

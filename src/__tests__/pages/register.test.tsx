@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import Register from "@/pages/register";
 import "@testing-library/jest-dom";
 import "whatwg-fetch";
-import { act } from "react"; 
+import { act } from "react";
 
 // Mock next/router
 jest.mock("next/router", () => ({
@@ -57,12 +57,17 @@ describe("Register Component", () => {
 
   test("displays error messages for invalid inputs", async () => {
     const submitButton = screen.getByRole("button", { name: /register/i });
-    userEvent.click(submitButton);
+    await act(async () => {
+      userEvent.click(submitButton);
+    })
 
-    expect(await screen.findByText(/Name is required/i)).toBeInTheDocument();
-    expect(await screen.findByText(/Email is required/i)).toBeInTheDocument();
-    expect(await screen.findByText(/Password is required/i)).toBeInTheDocument();
-  });
+    // Debug DOM for validation issues
+    screen.debug();
+// Use a flexible matcher to find the error message
+expect(await screen.findByText((content) => content.includes("Name is required"))).toBeInTheDocument();
+expect(await screen.findByText((content) => content.includes("Email is required"))).toBeInTheDocument();
+expect(await screen.findByText((content) => content.includes("Password is required"))).toBeInTheDocument();
+});
 
   test("submits the form with correct data", async () => {
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "John Doe" } });
@@ -91,7 +96,9 @@ describe("Register Component", () => {
     });
 
     const submitButton = screen.getByRole("button", { name: /register/i });
-    userEvent.click(submitButton);
+    await act(async () => {
+      userEvent.click(submitButton);
+    })
 
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
