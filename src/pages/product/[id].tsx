@@ -13,7 +13,7 @@ interface Product {
 }
 
 interface ProductDetailProps {
-  product: Product;
+  product?: Product;
 }
 
 const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {

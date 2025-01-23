@@ -18,7 +18,7 @@ interface CartItem {
 }
 
 // Define the CartContextProps interface
-interface CartContextProps {
+export interface CartContextProps {
   cart: CartItem[];
   cartCount: number; // Total items in the cart
   addToCart: (product: Product) => void;

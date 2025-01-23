@@ -153,7 +153,9 @@ const Register: React.FC = () => {
               Create your account
             </h2>
             {errors.general && <p className="text-center text-red-600">{errors.general}</p>}
-            <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+            <form className="space-y-6" onSubmit={handleSubmit} noValidate> {/* 
+    use `noValidate` for testing.
+    */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Name
