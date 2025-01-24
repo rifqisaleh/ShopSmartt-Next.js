@@ -10,14 +10,18 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
       ? product.images[0]
       : "/placeholder.png";
 
-  const { addToCart } = useContext(CartContext);
+  // Access the CartContext and handle the case where it might be undefined
+  const context = useContext(CartContext);
+
+  if (!context) {
+    console.warn("CartContext is not available.");
+    return null; // Optionally return a fallback UI if the context is missing
+  }
+
+  const { addToCart } = context;
 
   const handleAddToCart = () => {
-    if (addToCart) {
-      addToCart(product);
-    } else {
-      console.warn("CartContext is not available.");
-    }
+    addToCart(product);
   };
 
   return (
