@@ -2,15 +2,15 @@
 
 Hello Everyone !
 
-ShopSmart is an online store application built using React and TypeScript, designed to provide users with a seamless shopping experience. The app integrates features such as product browsing, category filtering, a shopping cart, user authentication, and more. To access my deployed website, visit: [https://shopsmartappmrs.netlify.app/]
+ShopSmart is an online store application built using Next.js and Typrecrsipt. The app integrates features such as product browsing, category filtering, a shopping cart, user authentication, and more. To access my deployed website, visit: [https://shop-smartt-next-js.vercel.app/]
 
 ## Overview of the Application
 ShopSmart allows users to explore a variety of products, filter by categories, and add items to their shopping cart. Users can log in to manage their accounts, while the shopping cart is accessible to both logged-in and non-logged-in users. The app is designed to be intuitive and responsive, ensuring ease of use across devices.
 
 To log-in to the account use:
 
-Email : sutrisno@mail.com
-Password: qwerty
+Email : sutris@mail.com
+Password: Qwerty123
  
 
 ## Features Implemented
@@ -23,7 +23,7 @@ Password: qwerty
 ## Installation Instructions
 1. Clone the repository:
    ```bash
-   git clone https://github.com/rifqisaleh/ShopSmartApp-Milestone2.git
+   git clone https://github.com/rifqisaleh/ShopSmartt-Next.js.git
    ```
 2. Navigate to the project directory:
    ```bash
@@ -40,48 +40,79 @@ Password: qwerty
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Technologies Used
-- **Frontend**: React, TypeScript, Tailwind CSS
-- **Backend API**: [Platzi API](https://api.escuelajs.co/)
-- **Routing**: React Router
-- **State Management**: React Context API
-- **Icon**: Font Awesome
+
+**Frontend**
+
+   1. Framework: Next.js (React)
+
+   2. Language: TypeScript
+
+   3. Styling: Tailwind CSS
+
+   4. Icons: Font Awesome
+
+
+**Backend API**
+
+   `https://fakeapi.platzi.com/en/about/introduction/`
+
+ **Routing** 
+ 
+   React Router
+
+**State Management** 
+
+   React Context API
+
+**Icon** 
+
+   Font Awesome
 
 ## Project Structure
+
 ```
 shopSmart/
 ├── public/
 ├── src/
-│   ├──Assets
-│   ├──auth
-│   │   ├──AuthContext.tsx
-│   ├── components/
+│   ├── __tests__/          # Unit and integration tests
+│   ├── components/         # Reusable components
 │   │   ├── Header.tsx
 │   │   ├── Footer.tsx
 │   │   ├── ProductCard.tsx
 │   │   ├── CategoryFilter.tsx
-│   │   ├── cart.tsx
-│   │   ├── layout.tsx
-│   │   ├── ProductCard.tsx
-│   │   ├── ProtectedRoute.tsx
-│   ├── pages/
-│   │   ├── Dashboard.tsx
-│   │   ├── LandingPages.tsx
-│   │   ├── ProductList.tsx
+│   │   ├── Layout.tsx
 │   │   ├── ShoppingCart.tsx
-│   │   ├── LoginForm.tsx
-│   │   ├── registerForm.tsx
-│   │   ├── ShippingPolicy.tsx
-│   │   ├── shoppingCart.tsx
-│   ├── context/
-│   │   ├── CartContext.tsx
+│   ├── context/            # React context for global states
 │   │   ├── AuthContext.tsx
-│   ├── App.tsx
-│   ├── index.tsx
-├── package.json
+│   │   ├── CartContext.tsx
+│   ├── pages/              # Next.js pages
+│   │   ├── api/            # API route handlers
+│   │   ├── cart/           # Cart-related pages
+│   │   ├── login/          # Login and registration pages
+│   │   ├── product/        # Product details and listing
+│   │   ├── shop/           # Shop-related pages
+│   │   ├── index.tsx       # Landing page
+│   ├── styles/             # Global and component-specific styles
+├── .env.local              # Environment variables
+├── .eslintrc               # Linter configuration
+├── jest.config.js          # Jest configuration for testing
+├── tailwind.config.js      # Tailwind CSS configuration
+├── tsconfig.json           # TypeScript configuration
+├── package.json            # Dependencies and scripts
 ```
 
 ## Contributing
-Feel free to fork the repository and submit pull requests. Contributions are welcome!
 
+Contributions are welcome! To contribute:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Submit a pull request with a detailed description of your changes.
+
+## Deployed Website
+
+Access the live application here: ShopSmart App
+
+Happy coding!
 
 
