@@ -2,8 +2,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 import Dashboard from "@/pages/dashboard";
 import { useRouter } from "next/router";
 import { AuthProvider } from "@/context/AuthContext"; // If your component depends on context
-import { server } from "../setupTests"; // Import your MSW server setup
+import { server } from "@/__tests__/setupTests"; // Import your MSW server setup
 import { rest } from "msw";
+
 
 jest.mock("next/router", () => ({
   useRouter: jest.fn(),
@@ -86,3 +87,4 @@ describe("Dashboard", () => {
     });
   });
 });
+
