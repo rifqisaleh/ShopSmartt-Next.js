@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext"; // Adjust path as needed
 import Head from "next/head";
 import { GetServerSideProps } from "next";
-import cookie from "cookie"; // To parse cookies on the server side
+import { parseCookies } from 'nookies';
 import { useRouter } from "next/router";
 
 interface UserProfile {
@@ -145,17 +145,10 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  console.log("getServerSideProps triggered...");
-  console.log("Incoming cookies:", context.req.headers.cookie);
-
-  console.log("Raw cookies:", context.req.headers.cookie);
-const cookies = cookie.parse(context.req.headers.cookie || "");
-console.log("Parsed cookies:", cookies);
-  
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const cookies = parseCookies(ctx);
   const token = cookies.token;
 
-  
   if (!token) {
     console.log("No token found. Redirecting to login...");
     return {
@@ -173,6 +166,7 @@ console.log("Parsed cookies:", cookies);
         Authorization: `Bearer ${token}`,
       },
     });
+
     if (!response.ok) {
       const errorData = await response.json();
       console.error("API Error:", errorData);
