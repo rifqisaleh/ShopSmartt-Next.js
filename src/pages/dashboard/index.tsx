@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext"; // Adjust path as needed
 import Head from "next/head";
 import { GetServerSideProps } from "next";
@@ -20,9 +20,10 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
   const { logout } = useAuth();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
   useEffect(() => {
-    if (!profile) {
+    if (!profile && router.pathname !== "/login") {
       console.log("No profile received in props. Redirecting to login...");
       router.push("/login");
     } else {
@@ -37,29 +38,30 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
     window.location.href = "/login";
   };
 
-  //For Account deletion
+  // For Account deletion
   const handleDeleteAccount = async () => {
+    setIsLoading(true);
     try {
       console.debug("Initiating account deletion process...");
-  
+
       const confirmDelete = window.confirm("Are you sure you want to delete your account?");
       if (!confirmDelete) {
         console.debug("Account deletion cancelled by the user.");
         return;
       }
-  
+
       // Extract token from cookies
       const token = document.cookie
         .split("; ")
         .find((row) => row.startsWith("token="))
         ?.split("=")[1];
-  
+
       if (!token) {
         console.error("Token not found in cookies.");
         throw new Error("Authorization token is missing. Please log in again.");
       }
       console.debug("Authorization token retrieved:", token);
-  
+
       // Make DELETE request to the API
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/profile`, {
         method: "DELETE",
@@ -68,18 +70,18 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
           "Content-Type": "application/json",
         },
       });
-  
+
       // Log request and response details
       console.debug("DELETE request sent to:", `${process.env.NEXT_PUBLIC_API_URL}auth/profile`);
       console.debug("Response status:", response.status);
       console.debug("Response headers:", response.headers);
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Failed to delete account. Response data:", errorData);
         throw new Error(errorData.message || "Failed to delete the account.");
       }
-  
+
       // Successful deletion
       console.log("Account deleted successfully.");
       alert("Your account has been deleted. You will be logged out.");
@@ -88,9 +90,10 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
       // Enhanced error logging
       console.error("Error during account deletion:", err);
       alert(err instanceof Error ? err.message : "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   if (!profile) {
     return (
@@ -121,18 +124,26 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
           <p className="text-center mt-4">Email: {profile.email}</p>
           <p className="text-center">Role: {profile.role}</p>
           <div className="mt-6 space-y-4">
-            <button
-              onClick={handleLogout}
-              className="w-full bg-urbanChic-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-urbanChic-900"
-            >
-              Log Out
-            </button>
-            <button
-              onClick={handleDeleteAccount}
-              className="w-full bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600"
-            >
-              Delete Account
-            </button>
+            {isLoading ? (
+              <button className="w-full bg-gray-500 text-white px-4 py-2 rounded-lg font-medium" disabled>
+                Loading...
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleLogout}
+                  className="w-full bg-urbanChic-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-urbanChic-900"
+                >
+                  Log Out
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  className="w-full bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600"
+                >
+                  Delete Account
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -169,7 +180,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     });
 
     if (!response.ok) {
-      console.error("Invalid token or API error. Redirecting to login...");
+      const errorData = await response.json();
+      console.error("API Error:", errorData);
       return {
         redirect: {
           destination: "/login",
