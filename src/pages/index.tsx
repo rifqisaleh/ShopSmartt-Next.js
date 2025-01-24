@@ -131,9 +131,9 @@ const LandingPage: React.FC = () => {
           <>
             <div className="flex flex-col sm:flex-row items-center w-full max-w-7xl mt-16 mb-16">
               <div className="sm:w-1/2 p-4">
-                <h1 className="text-6xl mb-16 text-urbanChic-600">Welcome to ShopSmart!</h1>
+                <h1 className="text-7xl mb-16 text-urbanChic-600">Welcome to ShopSmart!</h1>
                 <p className="text-2xl text-gray-700 italic">
-                  Discover amazing products from a variety of categories.
+                Discover an incredible selection of amazing products spanning a wide variety of categories, carefully curated to meet your every need and desire.
                 </p>
               </div>
 
@@ -173,7 +173,7 @@ const LandingPage: React.FC = () => {
                     <img
                       src={category.image || "/placeholder.png"}
                       alt={category.name}
-                      className="w-48 h-48 sm:w-56 sm:h-56 object-cover hover:scale-105 transition-transform"
+                      className="w-48 h-48 sm:w-64 sm:h-64 object-cover hover:scale-105 transition-transform"
                       onError={(e) => {
                         e.currentTarget.src = "/placeholder.png";
                       }}
