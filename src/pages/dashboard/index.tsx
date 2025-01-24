@@ -149,7 +149,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   console.log("getServerSideProps triggered...");
   console.log("Incoming cookies:", context.req.headers.cookie);
 
-  const cookies = cookie.parse(context.req.headers.cookie || "");
+  console.log("Raw cookies:", context.req.headers.cookie);
+const cookies = cookie.parse(context.req.headers.cookie || "");
+console.log("Parsed cookies:", cookies);
   
   const token = cookies.token;
 
