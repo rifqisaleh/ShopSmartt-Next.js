@@ -1,13 +1,19 @@
-import '@testing-library/jest-dom';
-import 'whatwg-fetch';
-import { setupServer } from 'msw/node';
-import { handlers } from '@/mocks/handlers';
+// import '@testing-library/jest-dom'; // Provides custom Jest matchers for DOM nodes
+// import 'whatwg-fetch'; // Polyfill for fetch API in Node.js environments
+// import { setupServer } from 'msw/node';
+// import { handlers.tsx } from '../mocks/handlers'; // Import your mock handlers
 
-// Create an MSW server
-const server = setupServer(...handlers);
+// // Create an MSW server with the handlers
+// const server = setupServer(...handlers);
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' })); // Warn if unhandled requests are made
-afterEach(() => server.resetHandlers()); // Reset handlers after each test
-afterAll(() => server.close()); // Close the server when tests are finished
+// // Establish API mocking before all tests
+// beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
 
-export { server };
+// // Reset any request handlers that are added during the tests
+// afterEach(() => server.resetHandlers());
+
+// // Clean up and close the server after the tests are finished
+// afterAll(() => server.close());
+
+// // Export the server for use in tests (optional)
+// export { server };

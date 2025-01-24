@@ -150,10 +150,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   console.log("Incoming cookies:", context.req.headers.cookie);
 
   const cookies = cookie.parse(context.req.headers.cookie || "");
+  
   const token = cookies.token;
 
-  console.log("Parsed token from cookies:", token);
-
+  
   if (!token) {
     console.log("No token found. Redirecting to login...");
     return {
@@ -171,9 +171,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         Authorization: `Bearer ${token}`,
       },
     });
-
     if (!response.ok) {
-      console.error(`API Error (Status ${response.status}):`, await response.json());
+      const errorData = await response.json();
+      console.error("API Error:", errorData);
       return {
         redirect: {
           destination: "/login",
@@ -182,9 +182,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    const profile: UserProfile = await response.json();
+    const profile = await response.json();
+    console.log("Fetched profile data:", profile);
+
     return {
-      props: { profile },
+      props: { profile }, // Pass the profile to the Dashboard page as props
     };
   } catch (error) {
     console.error("Error fetching profile:", error);
