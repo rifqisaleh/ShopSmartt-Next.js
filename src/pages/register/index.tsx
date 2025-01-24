@@ -43,7 +43,7 @@ const Register: React.FC = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState<boolean>(false);
-  const [rolesLoading, setRolesLoading] = useState<boolean>(true); // For roles fetching
+  const [rolesLoading, setRolesLoading] = useState<boolean>(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [rolesError, setRolesError] = useState<string | null>(null);
   const router = useRouter();
@@ -52,17 +52,22 @@ const Register: React.FC = () => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await fetch('/api/roles');
-        const rolesData: Role[] = await response.json(); // Explicitly define the type of rolesData
+        const response = await fetch(`${apiUrl}users`);
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Unexpected response format for roles.");
+        }
+        const rolesData: Role[] = await response.json();
         setRoles(rolesData.map((role: Role) => role.role));
       } catch (error) {
-        console.error('Error fetching roles:', error);
-        setRoles(['Customer', 'Admin']); // Default roles
+        console.error("Error fetching roles:", error);
+        setRolesError("Failed to load roles. Default roles applied.");
+        setRoles(["Customer", "Admin"]); // Default roles
       } finally {
         setRolesLoading(false);
       }
     };
-  
+
     fetchRoles();
   }, []);
 
@@ -75,7 +80,7 @@ const Register: React.FC = () => {
   // Validate form inputs
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Simple email regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!formData.name) newErrors.name = "Name is required";
     if (!formData.email) {
@@ -88,7 +93,16 @@ const Register: React.FC = () => {
       newErrors.confirmPassword = "Passwords do not match";
     }
     if (!formData.role) newErrors.role = "Role is required";
-    if (!formData.dob) newErrors.dob = "Date of Birth is required";
+    if (!formData.dob) {
+      newErrors.dob = "Date of Birth is required";
+    } else {
+      const age = Math.floor(
+        (Date.now() - new Date(formData.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+      );
+      if (age < 18) {
+        newErrors.dob = "You must be at least 18 years old.";
+      }
+    }
 
     return newErrors;
   };
@@ -98,8 +112,8 @@ const Register: React.FC = () => {
     event.preventDefault();
     setErrors({});
     setSuccessMessage(null);
-    const newErrors = validateForm();
 
+    const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -118,9 +132,14 @@ const Register: React.FC = () => {
         }),
       });
 
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Unexpected response format. Please try again.");
+      }
+
+      const data = await response.json();
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to register. Please try again.");
+        throw new Error(data.message || "Failed to register. Please try again.");
       }
 
       setSuccessMessage("Registration successful!");
@@ -133,7 +152,6 @@ const Register: React.FC = () => {
         dob: "",
       });
 
-      // Redirect to login after success
       setTimeout(() => {
         router.push("/login");
       }, 2000);
@@ -145,8 +163,6 @@ const Register: React.FC = () => {
     }
   };
 
-  
-
   return (
     <>
       <Head>
@@ -156,17 +172,12 @@ const Register: React.FC = () => {
       <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-urbanChic-100 py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <h1 className="mt-6 text-3xl text-center text-black mb-16">
-              Welcome To ShopSmart!
-            </h1>
-            <h2 className="mt-4 text-2xl text-center text-black mb-16">
-              Create your account
-            </h2>
+            <h1 className="mt-6 text-3xl text-center text-black mb-16">Welcome To ShopSmart!</h1>
+            <h2 className="mt-4 text-2xl text-center text-black mb-16">Create your account</h2>
             {errors.general && <p className="text-center text-red-600">{errors.general}</p>}
             {successMessage && <p className="text-center text-green-600">{successMessage}</p>}
 
-
-            <form className="space-y-6" onSubmit={handleSubmit} noValidate> {/* use `noValidate` for testing.*/}
+            <form className="space-y-6" onSubmit={handleSubmit} noValidate>
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Name
@@ -231,34 +242,35 @@ const Register: React.FC = () => {
                 {errors.confirmPassword && (
                   <p className="text-sm text-red-600">{errors.confirmPassword}</p>
                 )}
-                </div>
-                <div>
-  <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-    Role
-  </label>
-  {rolesLoading ? (
-    <p className="text-sm text-gray-500">Loading roles...</p>
-  ) : (
-    <select
-      id="role"
-      name="role"
-      value={formData.role}
-      onChange={handleChange}
-      required
-      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-    >
-      <option value="" disabled>
-        Select a role
-      </option>
-      {roles.map((role) => (
-        <option key={role} value={role}>
-          {role}
-        </option>
-      ))}
-    </select>
-  )}
-  {errors.role && <p className="text-sm text-red-600">{errors.role}</p>}
-</div>
+              </div>
+              <div>
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                  Role
+                </label>
+                {rolesLoading ? (
+                  <p className="text-sm text-gray-500">Loading roles...</p>
+                ) : (
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <option value="" disabled>
+                      Select a role
+                    </option>
+                    {roles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {errors.role && <p className="text-sm text-red-600">{errors.role}</p>}
+                {rolesError && <p className="text-sm text-red-600">{rolesError}</p>}
+              </div>
               <div>
                 <label htmlFor="dob" className="block text-sm font-medium text-gray-700">
                   Date of Birth
@@ -276,12 +288,12 @@ const Register: React.FC = () => {
               </div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || rolesLoading}
                 className={`w-full bg-urbanChic-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-urbanChic-900 focus:outline-none ${
-                  loading ? "bg-gray-400" : ""
+                  loading || rolesLoading ? "bg-gray-400" : ""
                 }`}
               >
-                {loading ? "Submitting..." : "Register"}
+                {loading ? "Submitting..." : rolesLoading ? "Loading Roles..." : "Register"}
               </button>
             </form>
           </div>
