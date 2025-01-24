@@ -92,6 +92,11 @@ const Register: React.FC = () => {
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
     if (!formData.role) newErrors.role = "Role is required";
     if (!formData.dob) {
       newErrors.dob = "Date of Birth is required";

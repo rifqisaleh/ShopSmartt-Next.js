@@ -1,4 +1,3 @@
-// filepath: /c:/Users/mrifq/Desktop/shopsmartpp_mrs/src/mocks/setupTests.ts
 import '@testing-library/jest-dom'; // Provides custom Jest matchers for DOM nodes
 import 'whatwg-fetch'; // Polyfill for fetch API in Node.js environments
 import { setupServer } from 'msw/node';
@@ -7,14 +6,20 @@ import { handlers } from './handlers'; // Import your mock handlers
 // Create an MSW server with the handlers
 const server = setupServer(...handlers);
 
-// Establish API mocking before all tests
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+beforeAll(() => {
+  console.log('Starting MSW Server');
+  server.listen({ onUnhandledRequest: 'warn' }); // Logs unhandled requests as warnings
+});
 
-// Reset any request handlers that are added during the tests
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  console.log('Resetting MSW Handlers');
+  server.resetHandlers(); // Resets handlers after each test
+});
 
-// Clean up and close the server after the tests are finished
-afterAll(() => server.close());
+afterAll(() => {
+  console.log('Closing MSW Server');
+  server.close(); // Stops the server when all tests are done
+});
 
 // Export the server for use in tests (optional)
 export { server };

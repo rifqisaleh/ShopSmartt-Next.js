@@ -1,84 +1,111 @@
-// import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-// import userEvent from "@testing-library/user-event";
-// import Register from "@/pages/register";
-// import "@testing-library/jest-dom";
-// import { server } from '../setupTests';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import Register from '@/pages/register';
+import '@testing-library/jest-dom';
+import { useRouter } from 'next/router';
 
-// jest.mock("next/router", () => ({
-//   useRouter: jest.fn(() => ({
-//     push: jest.fn(),
-//   })),
-// }));
+jest.mock('next/router', () => ({
+    useRouter: jest.fn()
+}));
 
-// // Mock fetch for roles
-// global.fetch = jest.fn(() =>
-//   Promise.resolve({
-//     ok: true,
-//     json: () => Promise.resolve(["Customer", "Admin"]),
-//   })
-// ) as jest.Mock;
+global.fetch = jest.fn(() =>
+    Promise.resolve({
+        json: () => Promise.resolve([{ role: 'Customer' }, { role: 'Admin' }])
+    })
+) as jest.Mock;
 
-// describe("Register Component", () => {
-//   test("renders the registration form", async () => {
-//     render(<Register />);
+describe('Register Page', () => {
+    beforeEach(() => {
+        const mockRouter = {
+            push: jest.fn(),
+            pathname: '/register'
+        };
+        (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    });
 
-//     // Wait for roles to load
-//     expect(await screen.findByText("Select a role")).toBeInTheDocument();
+    it('renders register form with all fields', async () => {
+        render(<Register />);
+        expect(screen.getByText('Create your account')).toBeInTheDocument();
+        expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+        expect(screen.getByLabelText('Password')).toBeInTheDocument();
+        expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
 
-//     expect(screen.getByLabelText("Name")).toBeInTheDocument();
-//     expect(screen.getByLabelText("Email")).toBeInTheDocument();
-//     expect(screen.getByLabelText("Password")).toBeInTheDocument();
-//     expect(screen.getByLabelText("Confirm Password")).toBeInTheDocument();
-//     expect(screen.getByLabelText("Role")).toBeInTheDocument();
-//     expect(screen.getByLabelText("Date of Birth")).toBeInTheDocument();
-//   });
+        await waitFor(() => {
+            expect(screen.getByRole('combobox', { name: /role/i })).toBeInTheDocument();
+        });
+    });
 
-//   test("updates form state on input change", async () => {
-//     render(<Register />);
+    it('validates required fields', async () => {
+        render(<Register />);
 
-//     // Wait for roles to load
-//     await screen.findByText("Select a role");
+        await waitFor(() => {
+            expect(screen.queryByText(/loading roles/i)).not.toBeInTheDocument();
+        });
 
-//     const nameInput = screen.getByLabelText("Name") as HTMLInputElement;
-//     fireEvent.change(nameInput, { target: { value: "John Doe" } });
-//     expect(nameInput.value).toBe("John Doe");
-//   });
+        fireEvent.click(screen.getByRole('button', { name: /register/i }));
 
-//   test("displays error messages for invalid inputs", async () => {
-//     render(<Register />);
+        expect(await screen.findByText(/name is required/i)).toBeInTheDocument();
+        expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
+        expect(await screen.findByText(/password is required/i)).toBeInTheDocument();
+    });
 
-//     // Wait for roles to load
-//     await screen.findByText("Select a role");
+    it('validates password length and match', async () => {
+        render(<Register />);
 
-//     const submitButton = screen.getByRole("button", { name: /register/i });
-//     userEvent.click(submitButton);
+        await waitFor(() => {
+            expect(screen.queryByText(/loading roles/i)).not.toBeInTheDocument();
+        });
 
-//     expect(await screen.findByText(/Name is required/i)).toBeInTheDocument();
-//     expect(await screen.findByText(/Email is required/i)).toBeInTheDocument();
-//     expect(await screen.findByText(/Password is required/i)).toBeInTheDocument();
-//   });
+        const passwordInput = screen.getByLabelText('Password');
+        const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
 
-//   it('submits the form with valid data', async () => {
-//     render(<Register />);
-  
-//     // Fill out the form
-//     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'John Doe' } });
-//     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'john@example.com' } });
-//     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-//     fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } });
-  
-//     // Wait for the roles to load
-//     await waitFor(() => expect(screen.getByText('Admin')).toBeInTheDocument());
-  
-//     fireEvent.change(screen.getByLabelText('Role'), { target: { value: 'Admin' } });
-//     fireEvent.change(screen.getByLabelText('Date of Birth'), { target: { value: '2000-01-01' } });
-  
-//     // Submit the form
-//     fireEvent.click(screen.getByRole('button', { name: /register/i }));
-  
-//     // Verify the success message
-//     await waitFor(() => {
-//       expect(screen.getByText(/User registered successfully/)).toBeInTheDocument();
-//     });
-//   });
-// })  
+        fireEvent.change(passwordInput, { target: { value: '123' } });
+        fireEvent.change(confirmPasswordInput, { target: { value: '123' } });
+        fireEvent.click(screen.getByRole('button', { name: /register/i }));
+
+        expect(await screen.findByText(/password must be at least 6 characters/i)).toBeInTheDocument();
+
+        fireEvent.change(confirmPasswordInput, { target: { value: 'password124' } });
+        fireEvent.click(screen.getByRole('button', { name: /register/i }));
+
+        expect(await screen.findByText(/passwords do not match/i)).toBeInTheDocument();
+    });
+
+    it('disables submit button while roles are loading', async () => {
+        render(<Register />);
+    
+        // Check that the button is disabled and has the loading text
+        expect(screen.getByRole('button', { name: /loading roles.../i })).toBeDisabled();
+    
+        // Wait for roles to load
+        await waitFor(() => {
+            expect(screen.queryByText(/loading roles/i)).not.toBeInTheDocument();
+        });
+    
+        // Ensure button is now enabled
+        const submitButton = screen.getByRole('button', { name: /register/i });
+        expect(submitButton).not.toBeDisabled();
+    });
+
+    it('handles successful form submission', async () => {
+        render(<Register />);
+    
+        await waitFor(() => {
+            expect(screen.queryByText(/loading roles/i)).not.toBeInTheDocument();
+        });
+    
+        // Fill in all required fields
+        fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'John Doe' } });
+        fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'john@example.com' } });
+        fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText(/role/i), { target: { value: 'Customer' } });
+        fireEvent.change(screen.getByLabelText(/date of birth/i), { target: { value: '2000-01-01' } });
+    
+        fireEvent.click(screen.getByRole('button', { name: /register/i }));
+    
+        // Assert success message
+        expect(await screen.findByText(/registration successful/i)).toBeInTheDocument();
+    });
+});
