@@ -1,88 +1,55 @@
-// import { render, screen, waitFor } from "@testing-library/react";
-// import Dashboard from "@/pages/dashboard";
-// import { useRouter } from "next/router";
-// import { AuthProvider } from "@/context/AuthContext"; // If your component depends on context
-// import { server } from "../setupTests"; // Import your MSW server setup
-// import { rest } from "msw";
+// filepath: /c:/Users/mrifq/Desktop/shopsmartpp_mrs/src/__tests__/pages/dashboard.test.tsx
+import { render, screen, waitFor } from '@testing-library/react';
+import Dashboard from '@/pages/dashboard';
+import { AuthProvider } from '@/context/AuthContext';
+import { server } from '@/mocks/setupTests';
+import { rest } from 'msw';
+import { useRouter } from 'next/router';
 
-// jest.mock("next/router", () => ({
-//   useRouter: jest.fn(),
-// }));
+jest.mock('next/router', () => ({
+  useRouter: jest.fn(),
+}));
 
-// beforeEach(() => {
-//   (useRouter as jest.Mock).mockReturnValue({
-//     push: jest.fn(),
-//     pathname: "/dashboard",
-//     query: {},
-//   });
-// });
+const mockPush = jest.fn();
+const mockRouter = {
+  push: mockPush,
+  prefetch: jest.fn().mockResolvedValue(undefined),
+};
 
-// afterEach(() => {
-//   jest.clearAllMocks();
-//   server.resetHandlers(); // Reset MSW handlers between tests
-// });
+(useRouter as jest.Mock).mockReturnValue(mockRouter);
 
-// describe("Dashboard", () => {
-//   it("renders user profile when authenticated", async () => {
-//     // Mock the /auth/profile API response to return user profile data
-//     server.use(
-//       rest.get(`${process.env.NEXT_PUBLIC_API_URL}auth/profile`, (req, res, ctx) => {
-//         console.log("Mock profile handler hit");
-//         return res(
-//           ctx.status(200),
-//           ctx.json({
-//             id: 1,
-//             name: "Test User",
-//             email: "test@example.com",
-//             avatar: "/test-avatar.jpg",
-//             role: "Customer",
-//           })
-//         );
-//       })
-//     );
+const mockProfile = {
+  id: 1,
+  name: 'John Doe',
+  email: 'john.doe@example.com',
+  avatar: 'https://example.com/avatar.jpg',
+  role: 'user',
+};
 
-//     render(
-//       <AuthProvider>
-//         <Dashboard profile={null} />
-//       </AuthProvider>
-//     );
+test('loads and displays profile', async () => {
+  render(
+    <AuthProvider>
+      <Dashboard profile={mockProfile} />
+    </AuthProvider>
+  );
 
-//     // Wait for the profile to load and assert the user information is displayed
-//     await waitFor(() => {
-//       expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
-//     });
+  const elements = await screen.findAllByText((content, element) => {
+    return element?.textContent?.includes('John Doe') ?? false;
+  });
 
-//      // Assert the user information is displayed
-//     expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
-//     expect(screen.getByText(/Email: test@example.com/i)).toBeInTheDocument();
-//     expect(screen.getByText(/Role: Customer/i)).toBeInTheDocument();
-//   });
+  expect(elements.length).toBeGreaterThan(0);
+});
 
-//   it("redirects to login when no profile is found", async () => {
-//     const pushMock = jest.fn();
-//     (useRouter as jest.Mock).mockReturnValue({
-//       push: pushMock,
-//       pathname: "/dashboard",
-//       query: {},
-//     });
+test('redirects to login when profile is null', async () => {
+  render(
+    <AuthProvider>
+      <Dashboard profile={null} />
+    </AuthProvider>
+  );
 
-//     // Mock the /auth/profile API response to return 401 Unauthorized
-//     server.use(
-//       rest.get("/auth/profile", (req, res, ctx) => {
-//         console.log("Unauthorized profile handler hit");
-//         return res(ctx.status(401), ctx.json({ message: "Unauthorized" }));
-//       })
-//     );
-
-//     render(
-//       <AuthProvider>
-//         <Dashboard profile={null} />
-//       </AuthProvider>
-//     );
-
-//     // Wait for redirection to login
-//     await waitFor(() => {
-//       expect(pushMock).toHaveBeenCalledWith("/login");
-//     });
-//   });
-// });
+  expect(screen.getByText('Loading or redirecting...')).toBeInTheDocument();
+  
+  await waitFor(() => {
+    expect(mockPush).toHaveBeenCalledWith('/login');
+  });
+});
