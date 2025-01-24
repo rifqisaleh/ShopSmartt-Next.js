@@ -9,7 +9,7 @@ interface UserProfile {
   id: number;
   name: string;
   email: string;
-  avatar: string;
+  avatar?: string; // Optional if not always returned
   role: string;
 }
 
@@ -23,7 +23,7 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
   const [isLoading, setIsLoading] = useState(false); // Loading state
 
   useEffect(() => {
-    if (!profile && router.pathname !== "/login") {
+    if (!profile) {
       console.log("No profile received in props. Redirecting to login...");
       router.push("/login");
     } else {
@@ -38,7 +38,6 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
     window.location.href = "/login";
   };
 
-  // For Account deletion
   const handleDeleteAccount = async () => {
     setIsLoading(true);
     try {
@@ -50,7 +49,6 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
         return;
       }
 
-      // Extract token from cookies
       const token = document.cookie
         .split("; ")
         .find((row) => row.startsWith("token="))
@@ -62,7 +60,6 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
       }
       console.debug("Authorization token retrieved:", token);
 
-      // Make DELETE request to the API
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/profile`, {
         method: "DELETE",
         headers: {
@@ -71,7 +68,6 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
         },
       });
 
-      // Log request and response details
       console.debug("DELETE request sent to:", `${process.env.NEXT_PUBLIC_API_URL}auth/profile`);
       console.debug("Response status:", response.status);
       console.debug("Response headers:", response.headers);
@@ -82,12 +78,10 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
         throw new Error(errorData.message || "Failed to delete the account.");
       }
 
-      // Successful deletion
       console.log("Account deleted successfully.");
       alert("Your account has been deleted. You will be logged out.");
       handleLogout();
     } catch (err) {
-      // Enhanced error logging
       console.error("Error during account deletion:", err);
       alert(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
@@ -170,7 +164,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
 
-  // Fetch user profile
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}auth/profile`, {
       method: "GET",
@@ -180,8 +173,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("API Error:", errorData);
+      console.error(`API Error (Status ${response.status}):`, await response.json());
       return {
         redirect: {
           destination: "/login",
@@ -190,14 +182,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       };
     }
 
-    const profile = await response.json();
-    console.log("Fetched profile data:", profile);
-
+    const profile: UserProfile = await response.json();
     return {
       props: { profile },
     };
-  } catch (err) {
-    console.error("Error fetching profile:", err);
+  } catch (error) {
+    console.error("Error fetching profile:", error);
     return {
       redirect: {
         destination: "/login",

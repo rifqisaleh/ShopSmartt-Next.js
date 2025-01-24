@@ -26,7 +26,7 @@ describe("Dashboard", () => {
   it("renders user profile when authenticated", async () => {
     // Mock the /auth/profile API response to return user profile data
     server.use(
-      rest.get("/auth/profile", (req, res, ctx) => {
+      rest.get(`${process.env.NEXT_PUBLIC_API_URL}auth/profile`, (req, res, ctx) => {
         console.log("Mock profile handler hit");
         return res(
           ctx.status(200),
@@ -52,6 +52,8 @@ describe("Dashboard", () => {
       expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
     });
 
+     // Assert the user information is displayed
+    expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
     expect(screen.getByText(/Email: test@example.com/i)).toBeInTheDocument();
     expect(screen.getByText(/Role: Customer/i)).toBeInTheDocument();
   });

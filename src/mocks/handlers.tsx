@@ -1,109 +1,88 @@
-import { rest } from 'msw';
-import { Role } from '@/pages/register';
+import { render, screen, waitFor } from "@testing-library/react";
+import Dashboard from "@/pages/dashboard";
+import { useRouter } from "next/router";
+import { AuthProvider } from "@/context/AuthContext"; // If your component depends on context
+import { server } from "../setupTests"; // Import your MSW server setup
+import { rest } from "msw";
 
-// Define handlers for mocking API requests
-export const handlers = [
-  // Mock handler for fetching product details
-  rest.get('/api/products/:id', (req, res, ctx) => {
-    const { id } = req.params as { id: string };
+jest.mock("next/router", () => ({
+  useRouter: jest.fn(),
+}));
 
-    // Example mocked product details for product with ID '1'
-    if (id === '1') {
-      return res(
-        ctx.status(200),
-        ctx.json({
-          id: 1,
-          title: 'Test Product',
-          description: 'This is a test product description.',
-          price: 99.99,
-          images: ['/test-image.jpg'],
-        })
-      );
-    }
+beforeEach(() => {
+  (useRouter as jest.Mock).mockReturnValue({
+    push: jest.fn(),
+    pathname: "/dashboard",
+    query: {},
+  });
+});
 
-    // If product ID is not '1', return a 404 error
-    return res(ctx.status(404), ctx.json({ error: 'Product not found!' }));
-  }),
+afterEach(() => {
+  jest.clearAllMocks();
+  server.resetHandlers(); // Reset MSW handlers between tests
+});
 
-  // Mock handler for adding to the cart
-  rest.post('/api/cart', (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ success: true }));
-  }),
-
-  // Mock handler for login
-  rest.post('/auth/login', async (req, res, ctx) => {
-    const { email, password } = await req.json();
-
-    if (email === 'test@example.com' && password === 'password123') {
-      return res(
-        ctx.status(200),
-        ctx.json({
-          access_token: 'mockAccessToken',
-          refresh_token: 'mockRefreshToken',
-        })
-      );
-    }
-
-    return res(ctx.status(401), ctx.json({ message: 'Invalid credentials' }));
-  }),
-
-  // Mock handler for fetching roles
-  rest.get('/api/roles', (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json([
-        { role: 'Customer' },
-        { role: 'Admin' },
-      ] as Role[]) // Explicitly cast as Role[]
-    );
-  }),
-
-  // Mock handler for submitting the registration form
-  rest.post('/api/users', async (req, res, ctx) => {
-    const { name, email, password, role, dob } = await req.json();
-
-    if (!name || !email || !password || !role || !dob) {
-      return res(ctx.status(400), ctx.json({ message: 'Validation failed' }));
-    }
-
-    return res(ctx.status(201), ctx.json({ message: 'User registered successfully' }));
-  }),
-
-  // Mock handler for fetching authenticated user profile
-  rest.get('/auth/profile', (req, res, ctx) => {
-    // Simulate an authenticated user
-    return res(
-      ctx.status(200),
-      ctx.json({
-        id: 1,
-        name: 'Test User',
-        email: 'test@example.com',
-        avatar: '/test-avatar.jpg',
-        role: 'Customer',
+describe("Dashboard", () => {
+  it("renders user profile when authenticated", async () => {
+    // Mock the /auth/profile API response to return user profile data
+    server.use(
+      rest.get(`${process.env.NEXT_PUBLIC_API_URL}auth/profile`, (req, res, ctx) => {
+        console.log("Mock profile handler hit");
+        return res(
+          ctx.status(200),
+          ctx.json({
+            id: 1,
+            name: "Test User",
+            email: "test@example.com",
+            avatar: "/test-avatar.jpg",
+            role: "Customer",
+          })
+        );
       })
     );
-  }),
 
-  // Mock handler for login
-  rest.post('/api/login', async (req, res, ctx) => {
-    const { email, password } = await req.json();
+    render(
+      <AuthProvider>
+        <Dashboard profile={null} />
+      </AuthProvider>
+    );
 
-    if (email === 'test@example.com' && password === 'password123') {
-      return res(
-        ctx.status(200),
-        ctx.json({
-          access_token: 'mockAccessToken',
-          refresh_token: 'mockRefreshToken',
-        })
-      );
-    }
+    // Wait for the profile to load and assert the user information is displayed
+    await waitFor(() => {
+      expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
+    });
 
-    return res(ctx.status(401), ctx.json({ message: 'Invalid credentials' }));
-  }),
+    // Assert the user information is displayed
+    expect(screen.getByText(/Welcome, Test User!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Email: test@example.com/i)).toBeInTheDocument();
+    expect(screen.getByText(/Role: Customer/i)).toBeInTheDocument();
+  });
 
-  // Catch-all for unhandled requests
-  rest.all('*', (req, res, ctx) => {
-    console.warn(`Unhandled request to: ${req.url.toString()}`);
-    return res(ctx.status(500), ctx.json({ error: 'Unhandled request!' }));
-  }),
-];
+  it("redirects to login when no profile is found", async () => {
+    const pushMock = jest.fn();
+    (useRouter as jest.Mock).mockReturnValue({
+      push: pushMock,
+      pathname: "/dashboard",
+      query: {},
+    });
+
+    // Mock the /auth/profile API response to return 401 Unauthorized
+    server.use(
+      rest.get(`${process.env.NEXT_PUBLIC_API_URL}auth/profile`, (req, res, ctx) => {
+        console.log("Unauthorized profile handler hit");
+        return res(ctx.status(401), ctx.json({ message: "Unauthorized" }));
+      })
+    );
+
+    render(
+      <AuthProvider>
+        <Dashboard profile={null} />
+      </AuthProvider>
+    );
+
+    // Wait for redirection to login
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/login");
+    });
+  });
+});
